@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>TaskFlow Login</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="login-container">
+    <div class="glass-card login-card">
+      <h1 id="formTitle" class="login-title">Login</h1>
+      <p id="formSubtitle" class="login-subtitle">
+        Access your tasks and collaborate in real time.
+      </p>
+
+      <form id="authForm">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input id="username" type="text" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input id="password" type="password" required />
+        </div>
+
+        <button
+          type="submit"
+          id="submitBtn"
+          class="btn btn-primary"
+          style="width: 100%"
+        >
+          Login
+        </button>
+      </form>
+
+      <p class="toggle-text">
+        <span id="toggleMsg">Don't have an account?</span>
+        <a href="#" id="toggleLink" class="toggle-link">Register</a>
+      </p>
+    </div>
+
+    <script>
+      const baseURL = "http://localhost:8001/api";
+      let isLogin = true;
+
+      const elements = {
+        title: document.getElementById("formTitle"),
+        subtitle: document.getElementById("formSubtitle"),
+        submit: document.getElementById("submitBtn"),
+        toggleMsg: document.getElementById("toggleMsg"),
+        toggleLink: document.getElementById("toggleLink"),
+      };
+
+      elements.toggleLink.onclick = () => {
+        isLogin = !isLogin;
+        const state = isLogin ? "Login" : "Register";
+        elements.title.textContent = state;
+        elements.subtitle.textContent = isLogin
+          ? "Access your tasks and collaborate in real time."
+          : "Create an account to start managing tasks.";
+        elements.submit.textContent = state;
+        elements.toggleMsg.textContent = isLogin
+          ? "Don't have an account?"
+          : "Already have an account?";
+        elements.toggleLink.textContent = isLogin ? "Register" : "Login";
+      };
+
+      document.getElementById("authForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value.trim();
+        if (!username || !password) return alert("Please fill in all fields.");
+
+        const endpoint = `${baseURL}/auth/${isLogin ? "login" : "register"}`;
+        try {
+          const res = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password }),
+          });
+          const data = await res.json();
+
+          if (data.token) {
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("username", username);
+            window.location.href = "./index.html";
+          } else {
+            alert(data.error || "Operation failed. Try again.");
+          }
+        } catch {
+          alert("Network error. Please try again.");
+        }
+      };
+    </script>
+  </body>
+</html>
